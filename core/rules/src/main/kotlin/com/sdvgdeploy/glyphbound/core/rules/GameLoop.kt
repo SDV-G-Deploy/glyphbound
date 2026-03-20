@@ -19,7 +19,8 @@ fun step(state: GameState, direction: Direction): GameState {
     }
 
     val tile = state.level.tileAt(target)
-    val hp = state.hp - tile.risk
+    val damage = tile.risk * state.profile.riskDamageMultiplier
+    val hp = state.hp - damage
     val atExit = target == state.level.exit
     val died = hp <= 0
 
@@ -32,7 +33,7 @@ fun step(state: GameState, direction: Direction): GameState {
         message = when {
             atExit -> "Escaped"
             died -> "You collapsed on the path"
-            tile == Tile.RISK -> "Risk tile hurt: -${tile.risk} HP"
+            tile == Tile.RISK -> "Risk tile hurt: -${damage} HP"
             else -> "Move"
         }
     )

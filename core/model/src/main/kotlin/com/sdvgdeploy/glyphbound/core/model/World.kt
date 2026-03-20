@@ -26,7 +26,8 @@ data class Level(
 data class GameState(
     val level: Level,
     val player: Pos,
-    val hp: Int = 10,
+    val profile: DifficultyProfile = DifficultyProfile.NORMAL,
+    val hp: Int = profile.startingHp,
     val moves: Int = 0,
     val finished: Boolean = false,
     val won: Boolean = false,

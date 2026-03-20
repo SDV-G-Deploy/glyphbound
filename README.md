@@ -1,25 +1,30 @@
-# Glyphbound (v0.1.1)
+# Glyphbound (v0.1.2)
 
-ASCII-like Android prototype with deterministic procedural generation.
+Android ASCII-like roguelite prototype with deterministic procedural generation.
+
+## V1-3 highlights
+- `GlyphMapView` custom renderer extracted from `MainActivity`:
+  - monospace paint (`Typeface.MONOSPACE`)
+  - stable per-cell width/height from font metrics
+  - DPI-safe canvas drawing
+  - high-contrast palette support
+  - no heavy animations
+- Difficulty profiles: `EASY`, `NORMAL`, `HARD`
+  - affect generation (`wallChance`, `riskChance`)
+  - affect validator strictness (`EDGE` vs `NODE`, min disjoint paths)
+  - affect gameplay (`startingHp`, risk damage multiplier)
+- Reproducibility key: `seed + profile`
+- New test coverage:
+  - lightweight golden snapshot for glyph buffer
+  - palette high-contrast policy test
+  - validator policy tests for EDGE/NODE behavior
+  - deterministic retry reproducibility for fixed `seed+profile`
 
 ## Modules
 - `app` — Android UI/input/render loop
-- `core:model` — domain model (`Tile`, `Level`, `GameState`)
+- `core:model` — domain model + difficulty profile + glyph render buffer
 - `core:rules` — movement and damage rules
 - `core:procgen` — deterministic generation + path validation API
-
-## V1-2 changes
-- Readability/mobile UI pass:
-  - monospace render with stable line spacing
-  - HUD with explicit `HP`, `Seed`, `Steps`
-  - short legend of glyph meanings
-  - bigger D-pad touch targets
-  - optional swipe input on map area
-- New high-contrast palette toggle in-app (`High contrast` switch).
-- Procgen validator upgraded from "2 shortest paths" to disjoint-path validation:
-  - `PathValidator.validate(...)` in `core:procgen`
-  - supports `DisjointMode.EDGE` and `DisjointMode.NODE`
-  - generator retries deterministically (`seed + attempt`) until valid map
 
 ## Run
 ```bash
@@ -28,18 +33,35 @@ ASCII-like Android prototype with deterministic procedural generation.
 APK path:
 `app/build/outputs/apk/debug/app-debug.apk`
 
+## Choosing difficulty profile
+By default: `NORMAL`.
+
+You can pass extras at launch:
+- `seed` (Long)
+- `profile` (`EASY|NORMAL|HARD`)
+
+Or switch in-app via the profile button in HUD.
+
+## Reproduce same map
+Use the same pair:
+- `seed`
+- `profile`
+
+Generator key is derived as deterministic `seedWithProfile(seed, profile)`.
+
 ## Tests
 ```bash
 ./gradlew test
 ```
-Included tests:
-- reproducibility: same seed => same map
-- connectivity: `S` always reaches `E`
-- disjoint-path validator: fail and pass fixtures
-- risk rule: stepping on `~` reduces HP
+Includes:
+- render golden snapshot (`GlyphRenderSnapshotTest`)
+- high-contrast palette expectation test
+- connectivity and disjoint validator policy tests
+- NODE stricter-than-EDGE controlled case
+- deterministic retry reproducibility for fixed `seed+profile`
 
 ## CI
-`.github/workflows/android-debug.yml`:
-1. runs `./gradlew test`
-2. builds debug APK
-3. uploads APK artifact
+`.github/workflows/android-debug.yml` runs:
+1. `./gradlew test`
+2. `./gradlew :app:assembleDebug`
+3. Uploads debug APK artifact

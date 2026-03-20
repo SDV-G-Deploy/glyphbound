@@ -1,5 +1,6 @@
 package com.sdvgdeploy.glyphbound.core.procgen
 
+import com.sdvgdeploy.glyphbound.core.model.DifficultyProfile
 import com.sdvgdeploy.glyphbound.core.model.Level
 import com.sdvgdeploy.glyphbound.core.model.Pos
 import com.sdvgdeploy.glyphbound.core.model.Tile
@@ -14,6 +15,10 @@ object LevelGenerator {
         val maxAttempts: Int = 200,
         val validator: PathValidationConfig = PathValidationConfig()
     )
+
+    fun generate(seed: Long, profile: DifficultyProfile): Level {
+        return generate(seedWithProfile(seed, profile), configFor(profile))
+    }
 
     fun generate(seed: Long, config: Config = Config()): Level {
         repeat(config.maxAttempts) { attempt ->
@@ -70,4 +75,17 @@ object LevelGenerator {
         tiles[exit.y][exit.x] = Tile.EXIT
         return Level(config.width, config.height, seed, tiles, entry, exit)
     }
+
+    fun seedWithProfile(seed: Long, profile: DifficultyProfile): Long {
+        return seed xor ((profile.ordinal.toLong() + 1L) shl 48)
+    }
+
+    fun configFor(profile: DifficultyProfile): Config = Config(
+        wallChance = profile.wallChance,
+        riskChance = profile.riskChance,
+        validator = PathValidationConfig(
+            minDisjointPaths = profile.minDisjointPaths,
+            mode = if (profile.useNodeDisjoint) DisjointMode.NODE else DisjointMode.EDGE
+        )
+    )
 }

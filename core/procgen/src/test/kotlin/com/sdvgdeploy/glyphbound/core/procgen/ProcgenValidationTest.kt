@@ -1,5 +1,6 @@
 package com.sdvgdeploy.glyphbound.core.procgen
 
+import com.sdvgdeploy.glyphbound.core.model.DifficultyProfile
 import com.sdvgdeploy.glyphbound.core.model.Level
 import com.sdvgdeploy.glyphbound.core.model.Pos
 import com.sdvgdeploy.glyphbound.core.model.Tile
@@ -33,7 +34,7 @@ class ProcgenValidationTest {
     }
 
     @Test
-    fun disjointValidator_failAndPassCases() {
+    fun edgeMode_policyPassAndFail() {
         val fail = fromAscii(
             "#####",
             "#S..#",
@@ -49,8 +50,53 @@ class ProcgenValidationTest {
             "#####"
         )
 
-        assertFalse(PathValidator.validate(fail).isValid)
-        assertTrue(PathValidator.validate(pass).isValid)
+        val edge = PathValidationConfig(minDisjointPaths = 2, mode = DisjointMode.EDGE)
+        assertFalse(PathValidator.validate(fail, edge).isValid)
+        assertTrue(PathValidator.validate(pass, edge).isValid)
+    }
+
+    @Test
+    fun nodeMode_isStricterThanEdge_onControlledMap() {
+        val edgeConfig = PathValidationConfig(minDisjointPaths = 2, mode = DisjointMode.EDGE)
+        val nodeConfig = PathValidationConfig(minDisjointPaths = 2, mode = DisjointMode.NODE)
+
+        val candidate = (1L..5_000L)
+            .map { LevelGenerator.generate(it, LevelGenerator.Config(width = 9, height = 7, wallChance = 0.28, riskChance = 0.0, validator = edgeConfig)) }
+            .firstOrNull { level ->
+                val edge = PathValidator.validate(level, edgeConfig)
+                val node = PathValidator.validate(level, nodeConfig)
+                edge.isValid && !node.isValid
+            }
+
+        assertTrue(candidate != null, "Expected at least one map where EDGE passes but NODE fails")
+
+        val edge = PathValidator.validate(candidate!!, edgeConfig)
+        val node = PathValidator.validate(candidate, nodeConfig)
+        assertTrue(edge.disjointPathCount >= node.disjointPathCount)
+        assertTrue(edge.isValid)
+        assertFalse(node.isValid)
+    }
+
+    @Test
+    fun deterministicRetry_withSameSeedAndProfile_staysReproducible() {
+        val seed = 8888L
+        val profile = DifficultyProfile.HARD
+
+        val a = LevelGenerator.generate(seed, profile)
+        val b = LevelGenerator.generate(seed, profile)
+
+        assertEquals(
+            a.tiles.map { row -> row.map { it.glyph } },
+            b.tiles.map { row -> row.map { it.glyph } }
+        )
+        assertEquals(a.seed, b.seed)
+
+        val validation = PathValidator.validate(
+            a,
+            LevelGenerator.configFor(profile).validator
+        )
+        assertTrue(validation.isValid)
+        assertEquals(DisjointMode.NODE, validation.mode)
     }
 
     private fun fromAscii(vararg rows: String): Level {
