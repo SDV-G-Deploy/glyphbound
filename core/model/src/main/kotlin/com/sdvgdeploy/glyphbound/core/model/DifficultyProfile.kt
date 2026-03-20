@@ -22,6 +22,8 @@ data class EnvTuning(
     val shockTickDamage: Int,
     val fireZoneTtl: Int,
     val shockZoneTtl: Int,
+    val persistentDamageCapPerTurn: Int,
+    val mixedZoneBonusDamage: Int,
     val fireSpreadProfile: SpreadProfile,
     val shockSpreadProfile: SpreadProfile,
     val configVersion: Int
@@ -63,6 +65,8 @@ private data class EnvTuningConfig(
     val shockTickDamage: Int,
     val fireZoneTtl: Int,
     val shockZoneTtl: Int,
+    val persistentDamageCapPerTurn: Int,
+    val mixedZoneBonusDamage: Int,
     val fireSpreadProfile: SpreadProfileConfig,
     val shockSpreadProfile: SpreadProfileConfig
 )
@@ -114,6 +118,8 @@ object DifficultyTuningCatalog {
                 shockTickDamage = 1,
                 fireZoneTtl = 2,
                 shockZoneTtl = 2,
+                persistentDamageCapPerTurn = 2,
+                mixedZoneBonusDamage = 0,
                 fireSpreadProfile = SpreadProfileConfig(spreadChance = 0.35, maxTargets = 1, maxChainDepth = 1),
                 shockSpreadProfile = SpreadProfileConfig(spreadChance = 0.30, maxTargets = 1, maxChainDepth = 1)
             )
@@ -135,6 +141,8 @@ object DifficultyTuningCatalog {
                 shockTickDamage = 1,
                 fireZoneTtl = 3,
                 shockZoneTtl = 2,
+                persistentDamageCapPerTurn = 3,
+                mixedZoneBonusDamage = 1,
                 fireSpreadProfile = SpreadProfileConfig(spreadChance = 0.55, maxTargets = 2, maxChainDepth = 2),
                 shockSpreadProfile = SpreadProfileConfig(spreadChance = 0.40, maxTargets = 2, maxChainDepth = 1)
             )
@@ -156,6 +164,8 @@ object DifficultyTuningCatalog {
                 shockTickDamage = 2,
                 fireZoneTtl = 4,
                 shockZoneTtl = 3,
+                persistentDamageCapPerTurn = 4,
+                mixedZoneBonusDamage = 2,
                 fireSpreadProfile = SpreadProfileConfig(spreadChance = 0.75, maxTargets = 3, maxChainDepth = 2),
                 shockSpreadProfile = SpreadProfileConfig(spreadChance = 0.65, maxTargets = 2, maxChainDepth = 2)
             )
@@ -233,6 +243,8 @@ object DifficultyTuningCatalog {
                 shockTickDamage = env.shockTickDamage.coerceIn(1, 6),
                 fireZoneTtl = env.fireZoneTtl.coerceIn(1, 8),
                 shockZoneTtl = env.shockZoneTtl.coerceIn(1, 8),
+                persistentDamageCapPerTurn = env.persistentDamageCapPerTurn.coerceIn(1, 8),
+                mixedZoneBonusDamage = env.mixedZoneBonusDamage.coerceIn(0, 4),
                 fireSpreadProfile = validateSpread(env.fireSpreadProfile),
                 shockSpreadProfile = validateSpread(env.shockSpreadProfile)
             )
@@ -262,6 +274,8 @@ object DifficultyTuningCatalog {
             shockTickDamage = config.env.shockTickDamage,
             fireZoneTtl = config.env.fireZoneTtl,
             shockZoneTtl = config.env.shockZoneTtl,
+            persistentDamageCapPerTurn = config.env.persistentDamageCapPerTurn,
+            mixedZoneBonusDamage = config.env.mixedZoneBonusDamage,
             fireSpreadProfile = SpreadProfile(
                 spreadChance = config.env.fireSpreadProfile.spreadChance,
                 maxTargets = config.env.fireSpreadProfile.maxTargets,

@@ -21,7 +21,8 @@ data class PipelineState(
     val levelTiles: List<MutableList<Tile>>,
     val hazardZones: List<HazardZone>,
     val events: List<String>,
-    val persistentHazardDamage: Int = 0
+    val persistentHazardDamage: Int = 0,
+    val mixedHazardBonusApplied: Int = 0
 )
 
 sealed interface GameEffect {
@@ -154,7 +155,12 @@ fun applyReactions(result: ReduceResult): PipelineState {
 }
 
 fun tickHazards(state: PipelineState): PipelineState {
-    val zoneDamage = state.hazardZones.filter { it.pos == state.state.player }.sumOf { it.damage }
+    val playerZones = state.hazardZones.filter { it.pos == state.state.player }
+    val fireDamage = playerZones.filter { it.type == HazardType.FIRE_ZONE }.sumOf { it.damage }
+    val shockDamage = playerZones.filter { it.type == HazardType.SHOCK_ZONE }.sumOf { it.damage }
+    val mixedBonus = if (fireDamage > 0 && shockDamage > 0) state.state.profile.env.mixedZoneBonusDamage else 0
+    val rawZoneDamage = fireDamage + shockDamage + mixedBonus
+    val zoneDamage = rawZoneDamage.coerceAtMost(state.state.profile.env.persistentDamageCapPerTurn)
 
     val decayedZones = state.hazardZones.mapNotNull { zone ->
         val ttl = zone.ttl - 1
@@ -171,7 +177,8 @@ fun tickHazards(state: PipelineState): PipelineState {
 
     return state.copy(
         hazardZones = decayedZones,
-        persistentHazardDamage = zoneDamage
+        persistentHazardDamage = zoneDamage,
+        mixedHazardBonusApplied = if (zoneDamage < rawZoneDamage) (mixedBonus - (rawZoneDamage - zoneDamage)).coerceAtLeast(0) else mixedBonus
     )
 }
 
@@ -199,6 +206,7 @@ fun buildCombatLog(state: PipelineState): GameState {
     val messageParts = buildList {
         addAll(state.events)
         if (state.persistentHazardDamage > 0) add("Persistent hazard: -${state.persistentHazardDamage} HP")
+        if (state.mixedHazardBonusApplied > 0) add("Mixed surge: +${state.mixedHazardBonusApplied}")
         if (died) add("You collapsed on the path")
         if (atExit && !died) add("Escaped")
     }

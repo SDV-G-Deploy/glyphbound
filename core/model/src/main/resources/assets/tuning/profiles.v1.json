@@ -18,12 +18,22 @@
         "shockTickDamage": 1,
         "fireZoneTtl": 2,
         "shockZoneTtl": 2,
-        "fireSpreadProfile": { "spreadChance": 0.35, "maxTargets": 1, "maxChainDepth": 1 },
-        "shockSpreadProfile": { "spreadChance": 0.30, "maxTargets": 1, "maxChainDepth": 1 }
+        "fireSpreadProfile": {
+          "spreadChance": 0.35,
+          "maxTargets": 1,
+          "maxChainDepth": 1
+        },
+        "shockSpreadProfile": {
+          "spreadChance": 0.3,
+          "maxTargets": 1,
+          "maxChainDepth": 1
+        },
+        "persistentDamageCapPerTurn": 2,
+        "mixedZoneBonusDamage": 0
       }
     },
     "NORMAL": {
-      "wallChance": 0.30,
+      "wallChance": 0.3,
       "minDisjointPaths": 2,
       "useNodeDisjoint": false,
       "startingHp": 10,
@@ -39,8 +49,18 @@
         "shockTickDamage": 1,
         "fireZoneTtl": 3,
         "shockZoneTtl": 2,
-        "fireSpreadProfile": { "spreadChance": 0.55, "maxTargets": 2, "maxChainDepth": 2 },
-        "shockSpreadProfile": { "spreadChance": 0.40, "maxTargets": 2, "maxChainDepth": 1 }
+        "fireSpreadProfile": {
+          "spreadChance": 0.55,
+          "maxTargets": 2,
+          "maxChainDepth": 2
+        },
+        "shockSpreadProfile": {
+          "spreadChance": 0.4,
+          "maxTargets": 2,
+          "maxChainDepth": 1
+        },
+        "persistentDamageCapPerTurn": 3,
+        "mixedZoneBonusDamage": 1
       }
     },
     "HARD": {
@@ -60,8 +80,18 @@
         "shockTickDamage": 2,
         "fireZoneTtl": 4,
         "shockZoneTtl": 3,
-        "fireSpreadProfile": { "spreadChance": 0.75, "maxTargets": 3, "maxChainDepth": 2 },
-        "shockSpreadProfile": { "spreadChance": 0.65, "maxTargets": 2, "maxChainDepth": 2 }
+        "fireSpreadProfile": {
+          "spreadChance": 0.75,
+          "maxTargets": 3,
+          "maxChainDepth": 2
+        },
+        "shockSpreadProfile": {
+          "spreadChance": 0.65,
+          "maxTargets": 2,
+          "maxChainDepth": 2
+        },
+        "persistentDamageCapPerTurn": 4,
+        "mixedZoneBonusDamage": 2
       }
     }
   }

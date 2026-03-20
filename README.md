@@ -1,37 +1,23 @@
-# Glyphbound (v0.2.5)
+# Glyphbound (v0.2.6)
 
 Android ASCII-like roguelite prototype with deterministic procedural generation and a ViewModel-driven state store.
 
-## V2-5 highlights
-- **External tuning config (P0):**
-  - Source of truth moved to `core/model/src/main/resources/assets/tuning/profiles.v1.json`.
-  - Strict JSON parser (`kotlinx.serialization`, unknown keys rejected).
-  - Validation clamps to safe bounds (required fields + ranges).
-  - Safe fallback policy: if resource is missing/invalid/unsupported version, runtime falls back to built-in safe defaults and logs reason.
+## V2-6 highlights
+- **Persistent hazard damage balancing (P0):**
+  - Added per-profile cap `persistentDamageCapPerTurn` to prevent runaway burst damage from stacked zones.
+  - Applied in `tickHazards` as a deterministic clamp (no random branches, no extra allocations).
 
-- **Config versioning + migration skeleton (P0):**
-  - Explicit `configVersion` in JSON and runtime (`EnvTuning.configVersion`).
-  - Supported baseline: `v1`.
-  - Unknown version path is explicit (`Unsupported configVersion=...`) and triggers safe fallback.
-  - Migration interface added (`ConfigMigrator`) with baseline `BaselineV1Migrator` stub for future v2+ migrations.
+- **Mixed-zone interaction depth (P1):**
+  - Added per-profile `mixedZoneBonusDamage` when player stands in simultaneous fire+shock zones.
+  - Bonus is still bounded by the same per-turn cap to keep low-end gameplay stable.
 
-- **Determinism hardening:**
-  - Seed pipeline now mixes `seed + profile + configVersion` (`LevelGenerator.seedWithProfile`).
+- **Data-driven tuning extension (P0):**
+  - Extended external config `profiles.v1.json` with both new env fields for EASY/NORMAL/HARD.
+  - Validation ranges added in catalog loader with safe default fallback retained.
 
-- **Snapshot/golden coverage for HUD/overlay (P1):**
-  - Added stable render-model snapshots in `HudRenderModelSnapshotTest` for:
-    - small-screen HUD legend format
-    - overlay conflict summary (`fire/shock/mixed`)
-    - high-contrast variant badge (`HC`)
-
-- **Property/fuzz expansion (P0):**
-  - Deterministic rules fuzz sweep increased to **1500 seeds** (`500 x EASY/NORMAL/HARD`).
-  - Added edge-seed suite including `Long.MIN_VALUE`, `Long.MAX_VALUE`, and signed extremes.
-  - Invariants checked:
-    - bounded hazards/chains
-    - HP + TTL bounds
-    - deterministic replay consistency
-  - Procgen deterministic sweep kept in place (`220 x 3`), plus seed-mix test for profile/version keying.
+- **Regression coverage update:**
+  - New rules test for mixed hazard cap behavior.
+  - Catalog bounds test expanded to include new tuning fields.
 
 ## Modules
 - `app` — Android UI/input/render loop + `GameViewModel`

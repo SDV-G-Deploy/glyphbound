@@ -186,6 +186,29 @@ class GameRulesTest {
     }
 
     @Test
+    fun mixedHazardDamage_appliesBonusAndCap() {
+        val initial = stateFrom(
+            rows = listOf(
+                "#####",
+                "#S.E#",
+                "#####"
+            ),
+            profile = DifficultyProfile.HARD,
+            player = Pos(1, 1)
+        ).copy(
+            hazardZones = listOf(
+                HazardZone(Pos(1, 1), HazardType.FIRE_ZONE, ttl = 3, damage = 3, source = "t"),
+                HazardZone(Pos(1, 1), HazardType.SHOCK_ZONE, ttl = 3, damage = 2, source = "t")
+            )
+        )
+
+        val after = step(initial, Direction.UP)
+
+        assertEquals(initial.hp - DifficultyProfile.HARD.env.persistentDamageCapPerTurn, after.hp)
+        assertTrue(after.message.contains("Persistent hazard"))
+    }
+
+    @Test
     fun edgeSeedSuite_extremeProfilesStayBounded() {
         val edgeSeeds = listOf(Long.MIN_VALUE, -1L, 0L, 1L, 42L, 999_999_999L, Long.MAX_VALUE)
         val intents = listOf(Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP, Direction.RIGHT)

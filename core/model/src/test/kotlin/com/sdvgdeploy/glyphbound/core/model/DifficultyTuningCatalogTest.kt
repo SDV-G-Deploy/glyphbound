@@ -20,6 +20,8 @@ class DifficultyTuningCatalogTest {
             assertTrue(env.hazardDamageMultiplier in 1..4)
             assertTrue(env.fireZoneTtl in 1..8)
             assertTrue(env.shockZoneTtl in 1..8)
+            assertTrue(env.persistentDamageCapPerTurn in 1..8)
+            assertTrue(env.mixedZoneBonusDamage in 0..4)
             assertTrue(env.fireSpreadProfile.spreadChance in 0.0..1.0)
             assertTrue(env.shockSpreadProfile.spreadChance in 0.0..1.0)
             assertTrue(env.fireSpreadProfile.maxTargets in 0..8)
