@@ -11,52 +11,136 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class GameRulesTest {
+
     @Test
-    fun steppingOnRiskTile_reducesHp() {
-        val tiles = mutableListOf(
-            mutableListOf(Tile.WALL, Tile.WALL, Tile.WALL),
-            mutableListOf(Tile.ENTRY, Tile.RISK, Tile.EXIT),
-            mutableListOf(Tile.WALL, Tile.WALL, Tile.WALL)
+    fun reducerMove_transitionIsPure() {
+        val initial = stateFrom(
+            listOf(
+                "#####",
+                "#SoE#",
+                "#####"
+            ),
+            profile = DifficultyProfile.NORMAL
         )
-        val level = Level(3, 3, 1L, tiles, Pos(0, 1), Pos(2, 1))
-        val initial = GameState(level = level, player = level.entry, hp = 10)
 
-        val next = step(initial, Direction.RIGHT)
+        val reduced = reduce(initial, Direction.RIGHT)
 
-        assertEquals(9, next.hp)
+        assertEquals(Pos(2, 1), reduced.state.player)
+        assertTrue(reduced.events.isEmpty())
     }
 
     @Test
-    fun oilPlusSpark_triggersIgnitionEffect() {
-        val tiles = mutableListOf(
-            mutableListOf(Tile.WALL, Tile.WALL, Tile.WALL, Tile.WALL),
-            mutableListOf(Tile.WALL, Tile.ENTRY, Tile.OIL, Tile.WALL),
-            mutableListOf(Tile.WALL, Tile.FLOOR, Tile.SPARK, Tile.WALL),
-            mutableListOf(Tile.WALL, Tile.WALL, Tile.WALL, Tile.WALL)
+    fun hazardTtlDecay_fireToAsh() {
+        val initial = stateFrom(
+            listOf(
+                "#####",
+                "#Sof#",
+                "#####"
+            ),
+            profile = DifficultyProfile.EASY,
+            player = Pos(1, 1)
         )
-        val level = Level(4, 4, 2L, tiles, Pos(1, 1), Pos(2, 2))
-        val initial = GameState(level = level, player = level.entry, profile = DifficultyProfile.NORMAL, hp = 10)
 
-        val next = step(initial, Direction.RIGHT)
+        val reduced = reduce(initial, Direction.RIGHT)
+        val afterFirst = processEffects(reduced)
+        val afterSecond = step(afterFirst, Direction.LEFT)
 
-        assertTrue(next.envEffects.isNotEmpty())
-        assertTrue(next.message.contains("Ignition"))
+        assertTrue(afterFirst.hazardZones.isNotEmpty())
+        assertEquals(Tile.ASH, afterSecond.level.tileAt(Pos(2, 1)))
     }
 
     @Test
-    fun waterPlusSpark_triggersShockEffect() {
-        val tiles = mutableListOf(
-            mutableListOf(Tile.WALL, Tile.WALL, Tile.WALL, Tile.WALL),
-            mutableListOf(Tile.WALL, Tile.ENTRY, Tile.WATER, Tile.WALL),
-            mutableListOf(Tile.WALL, Tile.FLOOR, Tile.SPARK, Tile.WALL),
-            mutableListOf(Tile.WALL, Tile.WALL, Tile.WALL, Tile.WALL)
+    fun tileTransitions_waterToShockedBackToWater() {
+        val initial = stateFrom(
+            listOf(
+                "#####",
+                "#S*w#",
+                "#####"
+            ),
+            profile = DifficultyProfile.EASY
         )
-        val level = Level(4, 4, 3L, tiles, Pos(1, 1), Pos(2, 2))
-        val initial = GameState(level = level, player = level.entry, profile = DifficultyProfile.NORMAL, hp = 10)
 
-        val next = step(initial, Direction.RIGHT)
+        val afterSpark = step(initial, Direction.RIGHT)
+        assertEquals(Tile.SHOCKED_WATER, afterSpark.level.tileAt(Pos(3, 1)))
 
-        assertTrue(next.envEffects.isNotEmpty())
-        assertTrue(next.message.contains("Shock"))
+        val cooled = step(afterSpark, Direction.LEFT)
+        assertEquals(Tile.WATER, cooled.level.tileAt(Pos(3, 1)))
+    }
+
+    @Test
+    fun chainReaction_isBoundedByProfile() {
+        val initial = stateFrom(
+            listOf(
+                "#######",
+                "#Sooo*#",
+                "#######"
+            ),
+            profile = DifficultyProfile.EASY
+        )
+
+        val reduced = reduce(initial, Direction.RIGHT)
+        val ignition = reduced.effects.filterIsInstance<GameEffect.IgniteOil>().flatMap { it.positions }
+
+        assertTrue(ignition.size <= DifficultyProfile.EASY.env.chainReactionMaxTargets)
+    }
+
+    @Test
+    fun deterministicSequence_sameSeedAndIntentsSameResult() {
+        val intents = listOf(Direction.RIGHT, Direction.RIGHT, Direction.LEFT, Direction.RIGHT)
+        val s1 = intents.fold(deterministicState()) { s, d -> step(s, d) }
+        val s2 = intents.fold(deterministicState()) { s, d -> step(s, d) }
+
+        assertEquals(s1.hp, s2.hp)
+        assertEquals(s1.player, s2.player)
+        assertEquals(s1.messageLog, s2.messageLog)
+        assertEquals(s1.hazardZones, s2.hazardZones)
+    }
+
+    private fun deterministicState(): GameState = stateFrom(
+        listOf(
+            "########",
+            "#So*wE##",
+            "########"
+        ),
+        profile = DifficultyProfile.NORMAL,
+        seed = 42L
+    )
+
+    private fun stateFrom(
+        rows: List<String>,
+        profile: DifficultyProfile,
+        seed: Long = 1L,
+        player: Pos? = null
+    ): GameState {
+        val tiles = rows.map { row ->
+            row.map { ch ->
+                when (ch) {
+                    '#' -> Tile.WALL
+                    'S' -> Tile.ENTRY
+                    'E' -> Tile.EXIT
+                    '.' -> Tile.FLOOR
+                    '~' -> Tile.RISK
+                    'o' -> Tile.OIL
+                    'w' -> Tile.WATER
+                    '*' -> Tile.SPARK
+                    'f' -> Tile.FIRE
+                    'a' -> Tile.ASH
+                    'z' -> Tile.SHOCKED_WATER
+                    else -> Tile.FLOOR
+                }
+            }.toMutableList()
+        }.toMutableList()
+
+        var entry = Pos(1, 1)
+        var exit = Pos(rows[0].length - 2, rows.size - 2)
+        rows.forEachIndexed { y, row ->
+            row.forEachIndexed { x, ch ->
+                if (ch == 'S') entry = Pos(x, y)
+                if (ch == 'E') exit = Pos(x, y)
+            }
+        }
+
+        val level = Level(rows[0].length, rows.size, seed, tiles, entry, exit)
+        return GameState(level = level, player = player ?: entry, profile = profile, hp = profile.startingHp)
     }
 }

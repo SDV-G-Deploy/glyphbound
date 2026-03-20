@@ -9,7 +9,11 @@ data class EnvTuning(
     val ignitionTurns: Int,
     val ignitionTickDamage: Int,
     val shockTurns: Int,
-    val shockTickDamage: Int
+    val shockTickDamage: Int,
+    val fireZoneTtl: Int,
+    val shockZoneTtl: Int,
+    val chainReactionChance: Double,
+    val chainReactionMaxTargets: Int
 )
 
 enum class DifficultyProfile(
@@ -33,7 +37,11 @@ enum class DifficultyProfile(
             ignitionTurns = 2,
             ignitionTickDamage = 1,
             shockTurns = 1,
-            shockTickDamage = 1
+            shockTickDamage = 1,
+            fireZoneTtl = 2,
+            shockZoneTtl = 2,
+            chainReactionChance = 0.35,
+            chainReactionMaxTargets = 1
         )
     ),
     NORMAL(
@@ -50,7 +58,11 @@ enum class DifficultyProfile(
             ignitionTurns = 2,
             ignitionTickDamage = 2,
             shockTurns = 2,
-            shockTickDamage = 1
+            shockTickDamage = 1,
+            fireZoneTtl = 3,
+            shockZoneTtl = 2,
+            chainReactionChance = 0.55,
+            chainReactionMaxTargets = 2
         )
     ),
     HARD(
@@ -67,7 +79,11 @@ enum class DifficultyProfile(
             ignitionTurns = 3,
             ignitionTickDamage = 2,
             shockTurns = 2,
-            shockTickDamage = 2
+            shockTickDamage = 2,
+            fireZoneTtl = 4,
+            shockZoneTtl = 3,
+            chainReactionChance = 0.75,
+            chainReactionMaxTargets = 3
         )
     );
 

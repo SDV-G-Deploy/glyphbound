@@ -11,6 +11,8 @@ data class GlyphPalette(
     val water: Int,
     val spark: Int,
     val fire: Int,
+    val shockedWater: Int,
+    val ash: Int,
     val fallback: Int = 0xFFFFFFFF.toInt()
 ) {
     fun colorFor(glyph: Char): Int = when (glyph) {
@@ -24,6 +26,8 @@ data class GlyphPalette(
         'w' -> water
         '*' -> spark
         'f' -> fire
+        'z' -> shockedWater
+        'a' -> ash
         else -> fallback
     }
 }
@@ -39,7 +43,9 @@ object GlyphRender {
         oil = 0xFF795548.toInt(),
         water = 0xFF64B5F6.toInt(),
         spark = 0xFFFFF176.toInt(),
-        fire = 0xFFFF7043.toInt()
+        fire = 0xFFFF7043.toInt(),
+        shockedWater = 0xFF00E5FF.toInt(),
+        ash = 0xFF8D8D8D.toInt()
     )
 
     val highContrastPalette = GlyphPalette(
@@ -52,7 +58,9 @@ object GlyphRender {
         oil = 0xFF8D6E63.toInt(),
         water = 0xFF00B0FF.toInt(),
         spark = 0xFFFFFF00.toInt(),
-        fire = 0xFFFF3D00.toInt()
+        fire = 0xFFFF3D00.toInt(),
+        shockedWater = 0xFF18FFFF.toInt(),
+        ash = 0xFFBDBDBD.toInt()
     )
 
     fun buildBuffer(level: Level, player: Pos): List<String> {

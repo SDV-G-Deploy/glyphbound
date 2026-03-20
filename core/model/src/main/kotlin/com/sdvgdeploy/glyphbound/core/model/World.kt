@@ -9,7 +9,9 @@ enum class Tile(val glyph: Char, val walkable: Boolean, val risk: Int = 0) {
     OIL('o', true, risk = 0),
     WATER('w', true, risk = 0),
     SPARK('*', true, risk = 1),
-    FIRE('f', true, risk = 2)
+    FIRE('f', true, risk = 2),
+    SHOCKED_WATER('z', true, risk = 1),
+    ASH('a', true, risk = 0)
 }
 
 data class Pos(val x: Int, val y: Int)
@@ -36,6 +38,16 @@ data class EnvEffect(
     val source: String
 )
 
+enum class HazardType { FIRE_ZONE, SHOCK_ZONE }
+
+data class HazardZone(
+    val pos: Pos,
+    val type: HazardType,
+    val ttl: Int,
+    val damage: Int,
+    val source: String
+)
+
 data class GameState(
     val level: Level,
     val player: Pos,
@@ -46,7 +58,8 @@ data class GameState(
     val won: Boolean = false,
     val message: String = "Reach E",
     val messageLog: List<String> = listOf("Reach E"),
-    val envEffects: List<EnvEffect> = emptyList()
+    val envEffects: List<EnvEffect> = emptyList(),
+    val hazardZones: List<HazardZone> = emptyList()
 )
 
 enum class Direction { UP, DOWN, LEFT, RIGHT }
