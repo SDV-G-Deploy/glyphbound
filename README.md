@@ -1,16 +1,25 @@
-# Glyphbound (v0.1.0)
+# Glyphbound (v0.1.1)
 
 ASCII-like Android prototype with deterministic procedural generation.
 
-## Vision
-Glyphbound is a compact, replayable mobile dungeon loop where each run is bound to a seed.
-Current goal: stable architecture + deterministic level generation + minimal playable core.
-
 ## Modules
-- `app` — Android UI + input loop + render
+- `app` — Android UI/input/render loop
 - `core:model` — domain model (`Tile`, `Level`, `GameState`)
-- `core:rules` — movement, risk handling, path validators
-- `core:procgen` — deterministic seed pipeline + map generation/fallback
+- `core:rules` — movement and damage rules
+- `core:procgen` — deterministic generation + path validation API
+
+## V1-2 changes
+- Readability/mobile UI pass:
+  - monospace render with stable line spacing
+  - HUD with explicit `HP`, `Seed`, `Steps`
+  - short legend of glyph meanings
+  - bigger D-pad touch targets
+  - optional swipe input on map area
+- New high-contrast palette toggle in-app (`High contrast` switch).
+- Procgen validator upgraded from "2 shortest paths" to disjoint-path validation:
+  - `PathValidator.validate(...)` in `core:procgen`
+  - supports `DisjointMode.EDGE` and `DisjointMode.NODE`
+  - generator retries deterministically (`seed + attempt`) until valid map
 
 ## Run
 ```bash
@@ -19,20 +28,18 @@ Current goal: stable architecture + deterministic level generation + minimal pla
 APK path:
 `app/build/outputs/apk/debug/app-debug.apk`
 
-## Seed reproducibility
-Default seed is `1337`.
-To launch with custom seed (adb):
+## Tests
 ```bash
-adb shell am start -n com.sdvgdeploy.glyphbound/.MainActivity --el seed 424242
+./gradlew test
 ```
-Same seed -> same generated map (for same build/config).
+Included tests:
+- reproducibility: same seed => same map
+- connectivity: `S` always reaches `E`
+- disjoint-path validator: fail and pass fixtures
+- risk rule: stepping on `~` reduces HP
 
-## Procgen validation rules
-- Connectedness: start (`S`) must reach exit (`E`)
-- At least 2 shortest routes from `S` to `E`
-- If validation fails repeatedly, deterministic fallback map is generated
-
-## V1 / V2 / V3 roadmap (short)
-- **V1**: deterministic maps, movement, risk tile, release pipeline
-- **V2**: entities (mobs/items), fog-of-war, combat tick, save/load
-- **V3**: progression/meta-layer, biome set, live-ops balancing seeds
+## CI
+`.github/workflows/android-debug.yml`:
+1. runs `./gradlew test`
+2. builds debug APK
+3. uploads APK artifact
