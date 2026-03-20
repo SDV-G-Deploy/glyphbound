@@ -41,4 +41,23 @@ class GlyphRenderSnapshotTest {
         assertNotEquals(normalColor, highContrastColor)
         assertEquals(0xFFFF0000.toInt(), highContrastColor)
     }
+
+    @Test
+    fun hazardOverlay_isRenderedIntoBuffer() {
+        val level = Level(
+            width = 4,
+            height = 3,
+            seed = 2L,
+            tiles = mutableListOf(
+                mutableListOf(Tile.WALL, Tile.WALL, Tile.WALL, Tile.WALL),
+                mutableListOf(Tile.WALL, Tile.FLOOR, Tile.FLOOR, Tile.WALL),
+                mutableListOf(Tile.WALL, Tile.WALL, Tile.WALL, Tile.WALL)
+            ),
+            entry = Pos(1, 1),
+            exit = Pos(2, 1)
+        )
+
+        val rendered = GlyphRender.buildBuffer(level, player = Pos(1, 1), hazardOverlays = mapOf(Pos(2, 1) to '^')).joinToString("\n")
+        assertEquals("####\n#@^#\n####", rendered)
+    }
 }

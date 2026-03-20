@@ -3,6 +3,8 @@ package com.sdvgdeploy.glyphbound.core.rules
 import com.sdvgdeploy.glyphbound.core.model.Direction
 import com.sdvgdeploy.glyphbound.core.model.DifficultyProfile
 import com.sdvgdeploy.glyphbound.core.model.GameState
+import com.sdvgdeploy.glyphbound.core.model.HazardType
+import com.sdvgdeploy.glyphbound.core.model.HazardZone
 import com.sdvgdeploy.glyphbound.core.model.Level
 import com.sdvgdeploy.glyphbound.core.model.Pos
 import com.sdvgdeploy.glyphbound.core.model.Tile
@@ -30,7 +32,7 @@ class GameRulesTest {
     }
 
     @Test
-    fun hazardTtlDecay_fireToAsh() {
+    fun pipelineStages_areComposable() {
         val initial = stateFrom(
             listOf(
                 "#####",
@@ -42,11 +44,42 @@ class GameRulesTest {
         )
 
         val reduced = reduce(initial, Direction.RIGHT)
-        val afterFirst = processEffects(reduced)
-        val afterSecond = step(afterFirst, Direction.LEFT)
+        val reacted = applyReactions(reduced)
+        val ticked = tickHazards(reacted)
+        val resolved = resolveDamage(ticked)
+        val final = buildCombatLog(resolved)
 
-        assertTrue(afterFirst.hazardZones.isNotEmpty())
-        assertEquals(Tile.ASH, afterSecond.level.tileAt(Pos(2, 1)))
+        assertEquals(Pos(2, 1), final.player)
+        assertTrue(final.messageLog.isNotEmpty())
+    }
+
+    @Test
+    fun hazardTtlDecay_fireToAsh() {
+        val initialBase = stateFrom(
+            listOf(
+                "#####",
+                "#SfE#",
+                "#####"
+            ),
+            profile = DifficultyProfile.EASY,
+            player = Pos(1, 1)
+        )
+        val initial = initialBase.copy(
+            hazardZones = listOf(
+                HazardZone(
+                    pos = Pos(2, 1),
+                    type = HazardType.FIRE_ZONE,
+                    ttl = 1,
+                    damage = 1,
+                    source = "test"
+                )
+            )
+        )
+
+        val after = step(initial, Direction.RIGHT)
+
+        assertTrue(after.hazardZones.isEmpty())
+        assertEquals(Tile.ASH, after.level.tileAt(Pos(2, 1)))
     }
 
     @Test
@@ -75,13 +108,13 @@ class GameRulesTest {
                 "#Sooo*#",
                 "#######"
             ),
-            profile = DifficultyProfile.EASY
+            profile = DifficultyProfile.HARD
         )
 
         val reduced = reduce(initial, Direction.RIGHT)
         val ignition = reduced.effects.filterIsInstance<GameEffect.IgniteOil>().flatMap { it.positions }
 
-        assertTrue(ignition.size <= DifficultyProfile.EASY.env.chainReactionMaxTargets)
+        assertTrue(ignition.size <= DifficultyProfile.HARD.env.fireSpreadProfile.maxTargets)
     }
 
     @Test
@@ -94,6 +127,33 @@ class GameRulesTest {
         assertEquals(s1.player, s2.player)
         assertEquals(s1.messageLog, s2.messageLog)
         assertEquals(s1.hazardZones, s2.hazardZones)
+    }
+
+    @Test
+    fun longSequenceInvariants_noRunawayAndFiniteStats() {
+        val intents = fixedLongSequence()
+        var state = stateFrom(
+            listOf(
+                "#########",
+                "#Sooow*E#",
+                "#...w...#",
+                "#########"
+            ),
+            profile = DifficultyProfile.HARD,
+            seed = 20260320L
+        )
+
+        intents.forEach { direction ->
+            state = step(state, direction)
+            assertTrue(state.hazardZones.size <= 32, "hazard zones runaway: ${state.hazardZones.size}")
+            assertTrue(state.hazardZones.all { it.ttl in 1..state.profile.env.fireZoneTtl.coerceAtLeast(state.profile.env.shockZoneTtl) })
+            assertTrue(state.hp in -200..state.profile.startingHp)
+        }
+    }
+
+    private fun fixedLongSequence(): List<Direction> {
+        val base = listOf(Direction.RIGHT, Direction.RIGHT, Direction.LEFT, Direction.DOWN, Direction.UP)
+        return List(60) { base[it % base.size] }
     }
 
     private fun deterministicState(): GameState = stateFrom(
