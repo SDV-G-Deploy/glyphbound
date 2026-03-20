@@ -1,5 +1,11 @@
 package com.sdvgdeploy.glyphbound.core.model
 
+data class SpreadProfile(
+    val spreadChance: Double,
+    val maxTargets: Int,
+    val maxChainDepth: Int
+)
+
 data class EnvTuning(
     val ambientRiskChance: Double,
     val oilChance: Double,
@@ -12,8 +18,8 @@ data class EnvTuning(
     val shockTickDamage: Int,
     val fireZoneTtl: Int,
     val shockZoneTtl: Int,
-    val chainReactionChance: Double,
-    val chainReactionMaxTargets: Int
+    val fireSpreadProfile: SpreadProfile,
+    val shockSpreadProfile: SpreadProfile
 )
 
 enum class DifficultyProfile(
@@ -40,8 +46,8 @@ enum class DifficultyProfile(
             shockTickDamage = 1,
             fireZoneTtl = 2,
             shockZoneTtl = 2,
-            chainReactionChance = 0.35,
-            chainReactionMaxTargets = 1
+            fireSpreadProfile = SpreadProfile(spreadChance = 0.35, maxTargets = 1, maxChainDepth = 1),
+            shockSpreadProfile = SpreadProfile(spreadChance = 0.30, maxTargets = 1, maxChainDepth = 1)
         )
     ),
     NORMAL(
@@ -61,8 +67,8 @@ enum class DifficultyProfile(
             shockTickDamage = 1,
             fireZoneTtl = 3,
             shockZoneTtl = 2,
-            chainReactionChance = 0.55,
-            chainReactionMaxTargets = 2
+            fireSpreadProfile = SpreadProfile(spreadChance = 0.55, maxTargets = 2, maxChainDepth = 2),
+            shockSpreadProfile = SpreadProfile(spreadChance = 0.40, maxTargets = 2, maxChainDepth = 1)
         )
     ),
     HARD(
@@ -82,8 +88,8 @@ enum class DifficultyProfile(
             shockTickDamage = 2,
             fireZoneTtl = 4,
             shockZoneTtl = 3,
-            chainReactionChance = 0.75,
-            chainReactionMaxTargets = 3
+            fireSpreadProfile = SpreadProfile(spreadChance = 0.75, maxTargets = 3, maxChainDepth = 2),
+            shockSpreadProfile = SpreadProfile(spreadChance = 0.65, maxTargets = 2, maxChainDepth = 2)
         )
     );
 
