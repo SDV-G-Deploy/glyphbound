@@ -1,0 +1,59 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/metaText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/mapText"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fontFamily="monospace"
+        android:textSize="13sp"
+        android:lineSpacingExtra="1dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/upButton"
+            android:layout_width="72dp"
+            android:layout_height="wrap_content"
+            android:text="↑" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/leftButton"
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:text="←" />
+
+            <Button
+                android:id="@+id/downButton"
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:text="↓" />
+
+            <Button
+                android:id="@+id/rightButton"
+                android:layout_width="72dp"
+                android:layout_height="wrap_content"
+                android:text="→" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
