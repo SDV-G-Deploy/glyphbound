@@ -3,8 +3,6 @@ package com.sdvgdeploy.glyphbound.core.procgen
 import com.sdvgdeploy.glyphbound.core.model.Level
 import com.sdvgdeploy.glyphbound.core.model.Pos
 import com.sdvgdeploy.glyphbound.core.model.Tile
-import com.sdvgdeploy.glyphbound.core.rules.isConnected
-import com.sdvgdeploy.glyphbound.core.rules.shortestPathCount
 import kotlin.random.Random
 
 object LevelGenerator {
@@ -13,13 +11,14 @@ object LevelGenerator {
         val height: Int = 16,
         val wallChance: Double = 0.30,
         val riskChance: Double = 0.08,
-        val maxAttempts: Int = 200
+        val maxAttempts: Int = 200,
+        val validator: PathValidationConfig = PathValidationConfig()
     )
 
     fun generate(seed: Long, config: Config = Config()): Level {
         repeat(config.maxAttempts) { attempt ->
             val level = build(seed + attempt, config)
-            if (isConnected(level) && shortestPathCount(level) >= 2) return level
+            if (PathValidator.validate(level, config.validator).isValid) return level
         }
         return buildCorridorFallback(seed, config)
     }
